@@ -30,7 +30,7 @@ pub fn compute_pattern(guess: &Word, solution: &Word) -> Pattern {
         if pattern.colors[i] != Colors::GREEN {
             let ch = guess.chars[i];
             let idx = chtoi(ch);
-            if letter_in_word(ch, &solution) && counts[idx] > 0 {
+            if letter_in_word(ch, solution) && counts[idx] > 0 {
                 pattern.colors[i] = Colors::YELLOW;
                 counts[idx] -= 1;
             }

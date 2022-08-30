@@ -7,15 +7,6 @@ impl Colors {
     pub const GRAY: Color = 0;
     pub const YELLOW: Color = 1;
     pub const GREEN: Color = 2;
-
-    pub fn from_char(ch: char) -> Color {
-        match ch {
-            'x' | 'X' => Colors::GRAY,
-            'y' | 'Y' => Colors::YELLOW,
-            'g' | 'G' => Colors::GREEN,
-            _ => unreachable!()
-        }
-    }
 }
 
 pub struct MatrixData;
@@ -33,35 +24,12 @@ impl Pattern {
         Self { colors: [Colors::GRAY; 5] }
     }
 
-    pub fn from_input(data: &str) -> Self {
-        let input = data.trim();
-        assert_eq!(input.len(), 5);
-        let mut pattern = Self::new();
-
-        input.chars().enumerate().for_each(|(i, ch)| {
-            pattern.colors[i] = Colors::from_char(ch);
-        });
-
-        pattern
-    }
-
     pub fn to_index(&self) -> usize {
         self.colors[4] as usize * 81 + // 3^4
         self.colors[3] as usize * 27 + // 3^3
         self.colors[2] as usize *  9 + // 3^2
         self.colors[1] as usize *  3 + // 3^1
         self.colors[0] as usize        // 3^0
-    }
-
-    pub fn to_string(&self) -> String {
-        self.colors.iter()
-            .map(|&x| match x {
-                Colors::GRAY => 'X',
-                Colors::YELLOW => 'C',
-                Colors::GREEN => 'O',
-                _ => 'L',
-            })
-            .collect()
     }
 }
 
@@ -131,9 +99,14 @@ impl MatchData {
     }
 
     // Auxiliary methods to update the internal data during initialization
-    // Sets the entire row for this character to NO
+    // Sets the entire row for this character to NO, taking care not
+    // to overwrite green/EXACT matches
     fn set_gray(&mut self, idx: usize) {
-        (0..5).for_each(|i| self.matrix[idx][i] = MatrixData::NO);
+        (0..5).for_each(|i| {
+            if self.matrix[idx][i] != MatrixData::EXACT {
+                self.matrix[idx][i] = MatrixData::NO
+            }
+        });
     }
 
     // Sets only the character's position to NO, and increments
