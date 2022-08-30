@@ -26,8 +26,7 @@ impl Benchmark {
 
         // The best initial word is always the same for a given
         // language, so we compute it during initialization
-        let initial_word = Word::from_str("salet");
-        // let initial_word = crate::find_best_splitter(&guesses, &solutions);
+        let initial_word = crate::find_best_splitter(&guesses, &solutions);
         Self { guesses, solutions, counts, initial_word }
     }
 
