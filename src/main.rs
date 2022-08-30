@@ -1,20 +1,20 @@
+mod benchmark;
 mod common;
 mod input;
 mod patterns;
 
-use std::fs::read_to_string;
 use rayon::prelude::*;
 
 use common::{Word, MatchData};
 use patterns::compute_pattern;
 
+pub static GUESSES_DATA: &str = include_str!("../data/valid.txt");
+pub static SOLUTIONS_DATA: &str = include_str!("../data/solutions.txt");
+
 fn main() {
-    let guesses_data = include_str!("../data/valid.txt");
-    let solutions_data = include_str!("../data/solutions.txt");
-
-    let mut guesses = read_words(guesses_data);
-    let mut solutions = read_words(solutions_data);
-
+    let mut guesses = read_words(GUESSES_DATA);
+    let mut solutions = read_words(SOLUTIONS_DATA);
+  
     println!("Use your keyboard to input the pattern that you got for every suggested word.");
     println!("g: Green, y: Yellow, x: Gray");
     println!("Enter to submit, backspace to go back.");
@@ -24,7 +24,11 @@ fn main() {
     guesses.extend(solutions.iter().copied());
 
     while solutions.len() > 1 {
-        let guess = find_best_splitter(&guesses, &solutions);
+        let guess = if solutions.len() == 2 {
+            solutions[0]
+        } else {
+            find_best_splitter(&guesses, &solutions)
+        };
         print!("{}", guess);
         let pattern = input::ask_for_pattern(&guess);
         let match_data = MatchData::from_word_match(&guess, &pattern);
@@ -38,14 +42,14 @@ fn main() {
     }
 }
 
-fn read_words(string: &str) -> Vec<Word> {
+pub fn read_words(string: &str) -> Vec<Word> {
     //let string = read_to_string(file).unwrap_or_else(|_| panic!("Couldn't read file: {}", file));
     string.lines().map(Word::from_str).collect()
 }
 
 // Returns the best splitter word for the given list of
 // solutions, along with the expected entropy.
-fn find_best_splitter(guesses: &[Word], solutions: &[Word]) -> Word {
+pub fn find_best_splitter(guesses: &[Word], solutions: &[Word]) -> Word {
     *guesses.par_iter()
             .map(|word| (word, expected_entropy(word, solutions)))
             .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())

@@ -64,7 +64,18 @@ impl MatchData {
         for (i, (&ch, &color)) in word.chars.iter().zip(pattern.colors.iter()).enumerate() {
             let idx = chtoi(ch);
             match color {
-                Colors::GRAY => data.set_gray(idx),
+                Colors::GRAY => {
+                    // Only set the entire row to gray if the
+                    // character has not appeared previously in yellow
+                    if !data.yellow_chars.contains(&idx) {
+                        data.set_gray(idx)
+                    } else {
+                        // Otherwise, we can only be sure that the
+                        // character does not appear in that
+                        // particular location
+                        data.matrix[idx][i] = MatrixData::NO;
+                    }
+                },
                 Colors::YELLOW => data.set_yellow(idx, i),
                 Colors::GREEN => data.set_green(idx, i),
                 _ => unreachable!()
