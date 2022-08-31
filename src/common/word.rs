@@ -17,7 +17,7 @@ impl Word {
 
     pub fn as_string(&self, translator: &CharTranslator) -> String {
         self.chars.iter()
-            .map(|&idx| translator.index_to_char(idx).to_ascii_uppercase())
+            .map(|&idx| translator.index_to_char(idx).to_uppercase().to_string())
             .collect()
     }
 
