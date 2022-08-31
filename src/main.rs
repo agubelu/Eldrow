@@ -1,38 +1,34 @@
 mod benchmark;
 mod common;
+mod dataloader;
 mod entropy;
 mod input;
 mod play;
 
-use common::Word;
-use benchmark::Benchmark;
-use play::interactive_play;
-
 use clap::Parser;
 
-pub static GUESSES_DATA: &str = include_str!("../data/en/valid.txt");
-pub static SOLUTIONS_DATA: &str = include_str!("../data/en/solutions.txt");
+use benchmark::Benchmark;
+use play::interactive_play;
 
 #[derive(Parser)]
 struct Args {
     #[clap(short, long, action)]
     benchmark: bool,
+
+    #[clap(short, long, default_value = "en")]
+    language: String,
 }
 
 fn main() {
     // Parse the command-line arguments
     let args = Args::parse();
+    let lang = args.language;
 
     // If the benchmark flag is active, run it, otherwise play the game
     if args.benchmark {
-        let bench = Benchmark::init();
+        let bench = Benchmark::init(&lang);
         bench.run();
     } else {
-        interactive_play();
+        interactive_play(&lang);
     }
 }
-
-pub fn read_words(string: &str) -> Vec<Word> {
-    string.lines().map(Word::from_str).collect()
-}
-

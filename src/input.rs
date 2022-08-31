@@ -1,4 +1,4 @@
-use crate::common::{Word, Pattern, Colors};
+use crate::common::{Pattern, Colors};
 
 use std::io::Write;
 use crossterm::{cursor, execute, terminal};
@@ -10,7 +10,7 @@ type WordleColor = crate::common::Color;
 
 // Interactively asks the user for the color pattern, updating the
 // current line to reflect the color selections made by the user
-pub fn ask_for_pattern(word: &Word) -> Pattern {
+pub fn ask_for_pattern(word: &str) -> Pattern {
     // Enter raw mode to capture the inputs
     terminal::enable_raw_mode()
         .expect("Your console is not compatible with raw mode, which is required to run Eldrow.");
@@ -18,6 +18,7 @@ pub fn ask_for_pattern(word: &Word) -> Pattern {
     let mut pos = 0;
     let mut pattern = Pattern::default();
     let mut done = false;
+    let chars: Vec<char> = word.chars().collect();
 
     // Set the cursor to the beggining of the line
     execute!(stdout, cursor::MoveToColumn(0), cursor::Hide, cursor::DisableBlinking).unwrap();
@@ -35,8 +36,7 @@ pub fn ask_for_pattern(word: &Word) -> Pattern {
                 KeyCode::Backspace if pos != 0 => {
                     pos -= 1;
                     execute!(stdout, cursor::MoveLeft(1)).unwrap();
-                    let ch = word.chars[pos].to_uppercase();
-                    write!(&mut stdout, "{}", ch).unwrap();
+                    write!(&mut stdout, "{}", chars[pos]).unwrap();
                     stdout.flush().unwrap();
                     execute!(stdout, cursor::MoveLeft(1)).unwrap();
                 }
@@ -49,9 +49,8 @@ pub fn ask_for_pattern(word: &Word) -> Pattern {
                     pattern.colors[pos] = wordle_color;
 
                     // Print the current character in the correct background color
-                    let ch = word.chars[pos].to_uppercase();
                     stdout.set_color(&color_spec).unwrap();
-                    write!(&mut stdout, "{}", ch).unwrap();
+                    write!(&mut stdout, "{}", chars[pos]).unwrap();
                     stdout.flush().unwrap();
                     pos += 1;
 
@@ -74,7 +73,7 @@ pub fn ask_for_pattern(word: &Word) -> Pattern {
 
 // Prints the final solution with a green background,
 // resetting stdout color afterwards before exiting
-pub fn print_in_green(word: &Word) {
+pub fn print_in_green(word: &str) {
     let mut stdout = StandardStream::stdout(ColorChoice::Always);
     stdout.set_color(ColorSpec::new().set_bg(Some(Color::Ansi256(71))).set_fg(Some(Color::Black))).unwrap();
     writeln!(stdout, "{}", word).unwrap();

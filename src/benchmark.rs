@@ -1,5 +1,5 @@
-use crate::{SOLUTIONS_DATA, GUESSES_DATA, read_words};
 use crate::common::{Word, MatchInfo};
+use crate::dataloader::{DataLoader, CharTranslator};
 use crate::entropy::find_best_splitter;
 
 use indicatif::ProgressIterator;
@@ -8,23 +8,18 @@ use rayon::prelude::*;
 pub struct Benchmark {
     guesses: Vec<Word>,
     solutions: Vec<Word>,
-    initial_word: Word
+    initial_word: Word,
+    translator: CharTranslator
 }
 
 impl Benchmark {
-    pub fn init() -> Self {
-        // English only right now, in the future this should select
-        // and load the word lists for the appropriate language
-        let mut guesses = read_words(GUESSES_DATA);
-        let solutions = read_words(SOLUTIONS_DATA);
-
-        // Extend the list of valid guesses with the solutions
-        guesses.extend(solutions.iter().copied());
+    pub fn init(lang: &str) -> Self {
+        let (guesses, solutions, translator) = DataLoader::load_language(lang);
 
         // The best initial word is always the same for a given
         // language, so we compute it during initialization
-        let initial_word = find_best_splitter(&guesses, &solutions);
-        Self { guesses, solutions, initial_word }
+        let initial_word = find_best_splitter(&guesses, &solutions, translator.count());
+        Self { guesses, solutions, initial_word, translator }
     }
 
     pub fn run(&self) {
@@ -39,7 +34,7 @@ impl Benchmark {
         let n_runs = self.solutions.len() as f32;
         let mut avg = 0.0;
 
-        println!("Opening word: {}", self.initial_word);
+        println!("Opening word: {}", self.initial_word.as_string(&self.translator));
         
         for (i, &count) in counts.iter().enumerate() {
             let s = if i == 6 { "X".to_owned() } else { (i+1).to_string() };
@@ -56,6 +51,7 @@ impl Benchmark {
     fn play_round(&self, solution: Word) -> usize {
         let mut attempts = 1;
         let mut solutions = self.solutions.clone();
+        let n_chars = self.translator.count();
 
         while attempts <= 6 {
             // Determine the word that we are going to try
@@ -72,7 +68,7 @@ impl Benchmark {
             } else {
                 // Otherwise, determine the optimal word for the remaining
                 // set of answers, updating it in the process
-                find_best_splitter(&self.guesses, &solutions)
+                find_best_splitter(&self.guesses, &solutions, n_chars)
             };
 
             // If the guess is the solution, the game has finished
@@ -82,8 +78,8 @@ impl Benchmark {
 
             // Otherwise, get the comparison pattern with the solution
             // and update the solutions list
-            let pattern = guess.compute_pattern(&solution);
-            let match_data = MatchInfo::from_word_match(&guess, &pattern);
+            let pattern = guess.compute_pattern(&solution, n_chars);
+            let match_data = MatchInfo::from_word_match(&guess, &pattern, n_chars);
             solutions = solutions.into_par_iter().filter(|w| match_data.matches(w)).collect();
             attempts += 1;
         }

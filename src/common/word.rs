@@ -1,35 +1,43 @@
-use std::fmt::{Formatter, Display, Debug, Result};
-use crate::common::{MAT_WIDTH, Pattern, Colors, chtoi};
+use crate::common::{Pattern, Colors};
+use crate::dataloader::CharTranslator;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Word {
-     pub chars: [char; 5] 
+    pub chars: [u16; 5], 
 }
 
 impl Word {
-    pub fn from_str(string: &str) -> Self {
-        assert_eq!(string.len(), 5);
-        let cv: Vec<char> = string.chars().collect();
-        let chars = [cv[0], cv[1], cv[2], cv[3], cv[4]];
+    pub fn from_str(string: &str, translator: &CharTranslator) -> Self {
+        let vu: Vec<u16> = string.chars()
+            .map(|ch| translator.char_to_index(ch))
+            .collect();
+        let chars = [vu[0], vu[1], vu[2], vu[3], vu[4]];
         Self { chars }
+    }
+
+    pub fn as_string(&self, translator: &CharTranslator) -> String {
+        self.chars.iter()
+            .map(|&idx| translator.index_to_char(idx).to_ascii_uppercase())
+            .collect()
     }
 
     // Computes the color pattern that you would get if you used
     // this word against the provided solution
-    pub fn compute_pattern(&self, solution: &Word) -> Pattern {
-        let mut counts = [0; MAT_WIDTH];
+    // We also have to know the total number of possible characters,
+    // to construct the count list with the appropriate size
+    pub fn compute_pattern(&self, solution: &Word, n_chars: usize) -> Pattern {
+        let mut counts = vec![0; n_chars];
         let mut pattern = Pattern::default();
 
         // Initialize the letter counter
-        solution.chars.iter().for_each(|ch| {
-            let idx = chtoi(*ch);
-            counts[idx] += 1;
+        solution.chars.iter().for_each(|&ch| {
+            counts[ch as usize] += 1;
         });
 
         // Look for exact (green) matches first
         (0..5).for_each(|i| {
             if self.chars[i] == solution.chars[i] {
-                let idx = chtoi(self.chars[i]);
+                let idx = self.chars[i] as usize;
                 counts[idx] -= 1;
                 pattern.colors[i] = Colors::GREEN;
             }
@@ -42,7 +50,7 @@ impl Word {
             // haven't matched all instances of that letter yet
             if pattern.colors[i] != Colors::GREEN {
                 let ch = self.chars[i];
-                let idx = chtoi(ch);
+                let idx = ch as usize;
                 if letter_in_word(ch, solution) && counts[idx] > 0 {
                     pattern.colors[i] = Colors::YELLOW;
                     counts[idx] -= 1;
@@ -55,18 +63,6 @@ impl Word {
 }
 
 // Aux function to determine if a word contains a letter in any position
-fn letter_in_word(letter: char, word: &Word) -> bool {
+fn letter_in_word(letter: u16, word: &Word) -> bool {
     word.chars.iter().any(|ch| *ch == letter)
-}
-
-impl Display for Word {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        f.write_str(&String::from_iter(&self.chars).to_uppercase())
-    }
-}
-
-impl Debug for Word {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        f.write_str(&String::from_iter(&self.chars).to_uppercase())
-    }
 }
