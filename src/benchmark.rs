@@ -1,6 +1,6 @@
 use crate::{SOLUTIONS_DATA, GUESSES_DATA, read_words};
-use crate::common::{Word, MatchData};
-use crate::patterns::compute_pattern;
+use crate::common::{Word, MatchInfo};
+use crate::entropy::find_best_splitter;
 
 use indicatif::ProgressIterator;
 use rayon::prelude::*;
@@ -8,7 +8,6 @@ use rayon::prelude::*;
 pub struct Benchmark {
     guesses: Vec<Word>,
     solutions: Vec<Word>,
-    counts: [usize; 7],
     initial_word: Word
 }
 
@@ -22,34 +21,34 @@ impl Benchmark {
         // Extend the list of valid guesses with the solutions
         guesses.extend(solutions.iter().copied());
 
-        let counts = [0; 7];
-
         // The best initial word is always the same for a given
         // language, so we compute it during initialization
-        let initial_word = crate::find_best_splitter(&guesses, &solutions);
-        Self { guesses, solutions, counts, initial_word }
+        let initial_word = find_best_splitter(&guesses, &solutions);
+        Self { guesses, solutions, initial_word }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&self) {
         println!("Running benchmark...");
+        let mut counts = [0; 7];
+
         for solution in self.solutions.iter().progress() {
             let tries = self.play_round(*solution);
-            self.counts[tries - 1] += 1;
+            counts[tries - 1] += 1;
         }
 
         let n_runs = self.solutions.len() as f32;
         let mut avg = 0.0;
+
+        println!("Opening word: {}", self.initial_word);
         
-        for i in 0..7 {
+        for (i, &count) in counts.iter().enumerate() {
             let s = if i == 6 { "X".to_owned() } else { (i+1).to_string() };
-            let count = self.counts[i];
             let ratio = count as f32 / n_runs;
             avg += (i+1) as f32 * ratio;
             println!("- {}: {} ({:.2}%)", s, count, ratio * 100.0);
         }
 
         println!("Average: {:.4}", avg);
-
     }
 
     // Plays one round for a given solution and returns the amount
@@ -65,7 +64,7 @@ impl Benchmark {
                 // we use the first one
                 // In the case of two solutions, the worst case is
                 // already two turns, so by using one of them,
-                // we'll save up a turn sometimes.
+                // we'll get it right in one turn 50% of the time.
                 solutions[0]
             } else if attempts == 1 {
                 // If it's the first attempt, use the initial word
@@ -73,7 +72,7 @@ impl Benchmark {
             } else {
                 // Otherwise, determine the optimal word for the remaining
                 // set of answers, updating it in the process
-                crate::find_best_splitter(&self.guesses, &solutions)
+                find_best_splitter(&self.guesses, &solutions)
             };
 
             // If the guess is the solution, the game has finished
@@ -83,8 +82,8 @@ impl Benchmark {
 
             // Otherwise, get the comparison pattern with the solution
             // and update the solutions list
-            let pattern = compute_pattern(&guess, &solution);
-            let match_data = MatchData::from_word_match(&guess, &pattern);
+            let pattern = guess.compute_pattern(&solution);
+            let match_data = MatchInfo::from_word_match(&guess, &pattern);
             solutions = solutions.into_par_iter().filter(|w| match_data.matches(w)).collect();
             attempts += 1;
         }

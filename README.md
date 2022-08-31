@@ -5,4 +5,3 @@ When you run Eldrow, it will give you a word to use as your initial try. You the
 TO-DO:
 - Tidy up some code
 - Make it expandable to any other languages (right now only English is supported)
-- Add benchmarks to determine how many tries Eldrow takes on average

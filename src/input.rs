@@ -8,16 +8,15 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 // Avoid clashes with termcolor::Color
 type WordleColor = crate::common::Color;
 
-// Interactively asks the user for the pattern, updating
-// the current line to reflect the color selections made
-// by the user
+// Interactively asks the user for the color pattern, updating the
+// current line to reflect the color selections made by the user
 pub fn ask_for_pattern(word: &Word) -> Pattern {
     // Enter raw mode to capture the inputs
     terminal::enable_raw_mode()
         .expect("Your console is not compatible with raw mode, which is required to run Eldrow.");
     let mut stdout = StandardStream::stdout(ColorChoice::Always);
     let mut pos = 0;
-    let mut pattern = Pattern::new();
+    let mut pattern = Pattern::default();
     let mut done = false;
 
     // Set the cursor to the beggining of the line

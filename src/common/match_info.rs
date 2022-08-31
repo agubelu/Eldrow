@@ -1,59 +1,24 @@
-pub const MAT_WIDTH: usize = 'z' as usize - 'a' as usize + 1;
-pub type Color = u8;
-pub type MatrixCell = u8;
+use crate::common::{MAT_WIDTH, Word, Pattern, Colors, chtoi};
 
-pub struct Colors;
-impl Colors {
-    pub const GRAY: Color = 0;
-    pub const YELLOW: Color = 1;
-    pub const GREEN: Color = 2;
-}
+type MatrixCell = u8;
 
-pub struct MatrixData;
+struct MatrixData;
+
 impl MatrixData {
     pub const UNKNOWN: MatrixCell = 0;
-    pub const NO: MatrixCell = 1;
+    pub const MISS: MatrixCell = 1;
     pub const EXACT: MatrixCell = 2;
 }
 
-pub struct Pattern { 
-    pub colors: [Color; 5] 
-}
-impl Pattern {
-    pub fn new() -> Self {
-        Self { colors: [Colors::GRAY; 5] }
-    }
-
-    pub fn to_index(&self) -> usize {
-        self.colors[4] as usize * 81 + // 3^4
-        self.colors[3] as usize * 27 + // 3^3
-        self.colors[2] as usize *  9 + // 3^2
-        self.colors[1] as usize *  3 + // 3^1
-        self.colors[0] as usize        // 3^0
-    }
-}
-
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub struct Word {
-     pub chars: [char; 5] 
-}
-impl Word {
-    pub fn from_str(string: &str) -> Self {
-        assert_eq!(string.len(), 5);
-        let cv: Vec<char> = string.chars().collect();
-        let chars = [cv[0], cv[1], cv[2], cv[3], cv[4]];
-        Self { chars }
-    }
-}
-
-// Auxiliary data used to quickly filter out words
-// that don't match a given pattern
-pub struct MatchData {
+// Auxiliary data used to quickly determine whether a possible solution
+// matches a color pattern produced by a given word
+pub struct MatchInfo {
     pub matrix: [[MatrixCell; 5]; MAT_WIDTH],
     pub counters: [u8; MAT_WIDTH],
     pub yellow_chars: Vec<usize>
 }
-impl MatchData {
+
+impl MatchInfo {
     pub fn from_word_match(word: &Word, pattern: &Pattern) -> Self {
         let matrix = [[MatrixData::UNKNOWN; 5]; MAT_WIDTH];
         let counters = [0; MAT_WIDTH];
@@ -73,7 +38,7 @@ impl MatchData {
                         // Otherwise, we can only be sure that the
                         // character does not appear in that
                         // particular location
-                        data.matrix[idx][i] = MatrixData::NO;
+                        data.matrix[idx][i] = MatrixData::MISS;
                     }
                 },
                 Colors::YELLOW => data.set_yellow(idx, i),
@@ -82,7 +47,7 @@ impl MatchData {
             }
         }
 
-        return data;
+        data
     }
 
     // Determines if a given word matches the current pattern info
@@ -93,7 +58,7 @@ impl MatchData {
         // word cannot be in its current position
         for (i, &ch) in word.chars.iter().enumerate() {
             let idx = chtoi(ch);
-            if self.matrix[idx][i] == MatrixData::NO {
+            if self.matrix[idx][i] == MatrixData::MISS {
                 return false;
             }
             
@@ -115,7 +80,7 @@ impl MatchData {
     fn set_gray(&mut self, idx: usize) {
         (0..5).for_each(|i| {
             if self.matrix[idx][i] != MatrixData::EXACT {
-                self.matrix[idx][i] = MatrixData::NO
+                self.matrix[idx][i] = MatrixData::MISS
             }
         });
     }
@@ -123,7 +88,7 @@ impl MatchData {
     // Sets only the character's position to NO, and increments
     // the counters for yellow characters
     fn set_yellow(&mut self, idx: usize, i: usize) {
-        self.matrix[idx][i] = MatrixData::NO;
+        self.matrix[idx][i] = MatrixData::MISS;
         self.counters[idx] += 1;
 
         if !self.yellow_chars.contains(&idx) {
@@ -135,11 +100,7 @@ impl MatchData {
     // for the character that was the green match
     fn set_green(&mut self, idx: usize, i: usize) {
         self.counters[idx] += 1;
-        (0..MAT_WIDTH).for_each(|other_idx| self.matrix[other_idx][i] = MatrixData::NO);
+        (0..MAT_WIDTH).for_each(|other_idx| self.matrix[other_idx][i] = MatrixData::MISS);
         self.matrix[idx][i] = MatrixData::EXACT;
     }
-}
-
-pub fn chtoi(ch: char) -> usize {
-    ch as usize - 'a' as usize
 }
