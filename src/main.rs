@@ -10,8 +10,8 @@ use play::interactive_play;
 
 use clap::Parser;
 
-pub static GUESSES_DATA: &str = include_str!("../data/valid.txt");
-pub static SOLUTIONS_DATA: &str = include_str!("../data/solutions.txt");
+pub static GUESSES_DATA: &str = include_str!("../data/en/valid.txt");
+pub static SOLUTIONS_DATA: &str = include_str!("../data/en/solutions.txt");
 
 #[derive(Parser)]
 struct Args {

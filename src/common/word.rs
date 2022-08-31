@@ -18,7 +18,6 @@ impl Word {
     // this word against the provided solution
     pub fn compute_pattern(&self, solution: &Word) -> Pattern {
         let mut counts = [0; MAT_WIDTH];
-
         let mut pattern = Pattern::default();
 
         // Initialize the letter counter

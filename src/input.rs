@@ -56,7 +56,7 @@ pub fn ask_for_pattern(word: &Word) -> Pattern {
                     pos += 1;
 
                     // Reset the color spec
-                    stdout.set_color(&ColorSpec::default()).unwrap();
+                    stdout.reset().unwrap();
                 }
                 
                 _ => {}
@@ -76,9 +76,9 @@ pub fn ask_for_pattern(word: &Word) -> Pattern {
 // resetting stdout color afterwards before exiting
 pub fn print_in_green(word: &Word) {
     let mut stdout = StandardStream::stdout(ColorChoice::Always);
-    stdout.set_color(ColorSpec::new().set_bg(Some(Color::Green)).set_fg(Some(Color::Black))).unwrap();
+    stdout.set_color(ColorSpec::new().set_bg(Some(Color::Ansi256(71))).set_fg(Some(Color::Black))).unwrap();
     writeln!(stdout, "{}", word).unwrap();
-    stdout.set_color(ColorSpec::new().set_bg(None)).unwrap();
+    stdout.reset().unwrap();
     stdout.flush().unwrap();
 }
 
@@ -94,9 +94,9 @@ fn read_key_blocking() -> KeyEvent {
 // Gets the correct background color for a keypress
 fn get_color_bg(code: &KeyCode) -> (ColorSpec, WordleColor) {
     let (spec_color, wordle_color) = match code {
-        KeyCode::Char('x') => (Color::Ansi256(7), Colors::GRAY),
-        KeyCode::Char('y') => (Color::Yellow, Colors::YELLOW),
-        KeyCode::Char('g') => (Color::Green, Colors::GREEN),
+        KeyCode::Char('x') => (Color::Ansi256(242), Colors::GRAY),
+        KeyCode::Char('y') => (Color::Ansi256(178), Colors::YELLOW),
+        KeyCode::Char('g') => (Color::Ansi256(71), Colors::GREEN),
         _ => unreachable!(),
     };
 
