@@ -28,7 +28,7 @@ pub fn interactive_play(lang: &str) {
             // we aren't worsening the worse case if we miss.
             solutions[0]
         } else {
-            find_best_splitter(&guesses, &solutions, n_chars)
+            find_best_splitter(&guesses, &solutions)
         };
 
         let guess_string = guess.as_string(&translator);

@@ -18,7 +18,7 @@ impl Benchmark {
 
         // The best initial word is always the same for a given
         // language, so we compute it during initialization
-        let initial_word = find_best_splitter(&guesses, &solutions, translator.count());
+        let initial_word = find_best_splitter(&guesses, &solutions);
         Self { guesses, solutions, initial_word, translator }
     }
 
@@ -68,7 +68,7 @@ impl Benchmark {
             } else {
                 // Otherwise, determine the optimal word for the remaining
                 // set of answers, updating it in the process
-                find_best_splitter(&self.guesses, &solutions, n_chars)
+                find_best_splitter(&self.guesses, &solutions)
             };
 
             // If the guess is the solution, the game has finished
@@ -78,7 +78,7 @@ impl Benchmark {
 
             // Otherwise, get the comparison pattern with the solution
             // and update the solutions list
-            let pattern = guess.compute_pattern(&solution, n_chars);
+            let pattern = guess.compute_pattern(&solution);
             let match_data = MatchInfo::from_word_match(&guess, &pattern, n_chars);
             solutions = solutions.into_par_iter().filter(|w| match_data.matches(w)).collect();
             attempts += 1;

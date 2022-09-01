@@ -25,8 +25,17 @@ impl Word {
     // this word against the provided solution
     // We also have to know the total number of possible characters,
     // to construct the count list with the appropriate size
-    pub fn compute_pattern(&self, solution: &Word, n_chars: usize) -> Pattern {
-        let mut counts = vec![0; n_chars];
+    pub fn compute_pattern(&self, solution: &Word) -> Pattern {
+        // counts used to be a vec defined as vec![0; n_chars]
+        // but it turns out that using an array here greatly improves
+        // efficiency, especially when calculating the opening word,
+        // which in turn gives a much better responsiveness on startup.
+        // I figured that 256 should be a reasonable margin to accomodate
+        // most languages. If you're reading this code because you added
+        // a language with more than 256 characters, please, leave an
+        // issue or a PR and I'll be happy to change it back or do
+        // something else about it :)
+        let mut counts = [0; 256];
         let mut pattern = Pattern::default();
 
         // Initialize the letter counter
