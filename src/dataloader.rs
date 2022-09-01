@@ -28,10 +28,13 @@ impl DataLoader {
         let path_valid_words = format!("data/{}/valid.txt", lang.to_lowercase());
         let path_solutions = format!("data/{}/solutions.txt", lang.to_lowercase());
 
+        // Make sure to turn all the words to lowercase for consistency
         let valid_words_str = read_to_string(path_valid_words)
-            .expect("Could not find the list of valid words for the specified language");
+            .expect("Could not find the list of valid words for the specified language")
+            .to_lowercase();
         let solutions_str = read_to_string(path_solutions)
-            .expect("Could not find the list of solutions for the specified language");
+            .expect("Could not find the list of solutions for the specified language")
+            .to_lowercase();
 
         // Update the character translator with the words found in both files
         translator.update(&valid_words_str);
@@ -43,6 +46,12 @@ impl DataLoader {
 
         // Extend the list of valid guesses with the solutions
         valid_words.extend(solutions.iter().copied());
+
+        // Make sure that the list of valid words doesn't contain duplicates.
+        // In some wordles, they sometimes also contain the solutions, so
+        // the previous step may have duplicated them
+        valid_words.sort_unstable();
+        valid_words.dedup();
 
         (valid_words, solutions, translator)
     }

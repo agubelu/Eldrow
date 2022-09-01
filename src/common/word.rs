@@ -1,7 +1,7 @@
 use crate::common::{Pattern, Colors};
 use crate::dataloader::CharTranslator;
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Word {
     pub chars: [u16; 5], 
 }
