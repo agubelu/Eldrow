@@ -1,6 +1,7 @@
 use crate::common::{Pattern, Colors};
 
 use std::io::Write;
+use std::process::exit;
 use crossterm::{cursor, execute, terminal};
 use crossterm::event::{Event, KeyEvent, read, KeyModifiers, KeyCode};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
@@ -18,6 +19,7 @@ pub fn ask_for_pattern(word: &str) -> Pattern {
     let mut pos = 0;
     let mut pattern = Pattern::default();
     let mut done = false;
+    let mut ctrl_c = false;
     let chars: Vec<char> = word.chars().collect();
 
     // Set the cursor to the beggining of the line
@@ -27,7 +29,10 @@ pub fn ask_for_pattern(word: &str) -> Pattern {
         // Read the next key event
         match &read_key_blocking() {
             // We're in raw mode so we must take care of processing CTRL+C ourselves
-            ev if is_ctrl_c(ev) => std::process::exit(0),
+            ev if is_ctrl_c(ev) => {
+                ctrl_c = true;
+                break;
+            },
             // In any other case, process the input:
             KeyEvent { code, modifiers: _, .. } => match code {
                 // Process enter if we are done with the pattern
@@ -68,6 +73,12 @@ pub fn ask_for_pattern(word: &str) -> Pattern {
 
     // Print a newline in preparation for the next word
     println!();
+
+    // If we reached here because of a CTRL+C, end the process
+    if ctrl_c {
+        exit(0);
+    }
+
     pattern
 }
 
