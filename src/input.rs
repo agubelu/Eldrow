@@ -76,8 +76,9 @@ pub fn ask_for_pattern(word: &str) -> Pattern {
 pub fn print_in_green(word: &str) {
     let mut stdout = StandardStream::stdout(ColorChoice::Always);
     stdout.set_color(ColorSpec::new().set_bg(Some(Color::Ansi256(71))).set_fg(Some(Color::Black))).unwrap();
-    writeln!(stdout, "{}", word).unwrap();
+    write!(stdout, "{}", word).unwrap();
     stdout.reset().unwrap();
+    writeln!(stdout).unwrap();
     stdout.flush().unwrap();
 }
 
